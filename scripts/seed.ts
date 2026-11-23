@@ -33,12 +33,18 @@ import { walkInEntry } from "@/server/entry";
 import { finaliseCompetition } from "@/server/results";
 import { completeRound, recordShot, startRound } from "@/server/rounds";
 
-if (process.env.NODE_ENV === "production") {
+/**
+ * Demo instances (e.g. a Railway test deployment) may opt in with
+ * ALLOW_DEMO_SEED=true. The seed then only runs on an EMPTY database and
+ * never wipes existing data. DEMO_PASSWORD sets the staff password.
+ */
+const demoMode = process.env.ALLOW_DEMO_SEED === "true";
+if (process.env.NODE_ENV === "production" && !demoMode) {
   console.error("Refusing to seed a production environment.");
   process.exit(1);
 }
 
-const DEV_PASSWORD = "pinhunters-dev";
+const DEV_PASSWORD = process.env.DEMO_PASSWORD || "pinhunters-dev";
 const TERMS = "dev-terms-1";
 
 const FIRST = ["James", "Tom", "Chris", "Steve", "Oliver", "Harry", "Jack", "Ellie", "Sophie", "Dan", "Matt", "Rob", "Gary", "Paul", "Lucy", "Amir", "Ravi", "Will", "Ben", "Kate", "Nick", "Sam", "Joe", "Mark", "Pete"];
@@ -50,6 +56,14 @@ const rand = () => ((state = (state * 1664525 + 1013904223) % 4294967296) / 4294
 const distance = () => Math.round(300 + Math.pow(rand(), 1.7) * 14000);
 
 async function main() {
+  if (demoMode) {
+    const existing = await db.execute<{ n: number }>(sql`select count(*)::int as n from users`);
+    if (Number(existing.rows[0]?.n) > 0) {
+      console.log("Demo seed skipped: database already has users.");
+      await getPool().end();
+      return;
+    }
+  }
   console.log("Seeding development data (fictional)…");
   const tables = await db.execute<{ tablename: string }>(sql`select tablename from pg_tables where schemaname='public'`);
   await db.execute(sql.raw(`truncate ${tables.rows.map((t) => `"${t.tablename}"`).join(",")} restart identity cascade`));
@@ -213,7 +227,7 @@ async function main() {
 
   console.log(`
 Done. Fictional development data only.
-  Staff logins (password: ${DEV_PASSWORD}):
+  Staff logins (password: ${process.env.DEMO_PASSWORD ? "[DEMO_PASSWORD]" : DEV_PASSWORD}):
     admin@evolutiongolf.test   (Super Admin)
     manager@evolutiongolf.test (Manager)
     staff@evolutiongolf.test   (Staff)
