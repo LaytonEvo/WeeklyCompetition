@@ -3,7 +3,7 @@
   "build": { "buildCommand": "pnpm build" },
   "deploy": {
     "preDeployCommand": ["pnpm release"],
-    "startCommand": "pnpm start",
+    "startCommand": "pnpm start:prod",
     "healthcheckPath": "/",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE"
