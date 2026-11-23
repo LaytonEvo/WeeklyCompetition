@@ -13,7 +13,7 @@ import {
   rounds,
   type CompetitionConfig,
 } from "@/db/schema";
-import { audit, type Actor } from "@/lib/audit";
+import { audit, SYSTEM_ACTOR, type Actor } from "@/lib/audit";
 import { AppError, ConflictError, NotFoundError } from "@/lib/errors";
 import { bumpLeaderboard } from "@/lib/realtime";
 import { FORMAT_AVAILABILITY } from "@/lib/scoring/strategies";
@@ -471,6 +471,7 @@ export async function autoCreateFromTemplates(actor: Actor, now = new Date(), we
 
 /** Competition to feature publicly: open > next scheduled > most recent finished. */
 export async function getFeaturedCompetition(locationSlug?: string) {
+  await applyDueTransitions(SYSTEM_ACTOR);
   const loc = locationSlug ? (await db.select().from(locations).where(eq(locations.slug, locationSlug)))[0] : undefined;
   const where = (statuses: CompetitionStatus[]) =>
     loc ? and(inArray(competitions.status, statuses), eq(competitions.locationId, loc.id)) : inArray(competitions.status, statuses);
@@ -504,4 +505,33 @@ export async function dueTransitions(now = new Date()) {
   const toOpen = await db.select().from(competitions).where(and(eq(competitions.status, "scheduled"), lte(competitions.startsAt, now)));
   const toClose = await db.select().from(competitions).where(and(eq(competitions.status, "open"), lte(competitions.endsAt, now)));
   return { toOpen, toClose };
+}
+
+/**
+ * Apply any due open/close transitions now. Called from the scheduler AND
+ * lazily from hot paths (console, featured competition), so deadlines are
+ * enforced on time even if the cron is delayed. Idempotent and cheap when
+ * nothing is due.
+ */
+export async function applyDueTransitions(actor: Actor, now = new Date()) {
+  const { toOpen, toClose } = await dueTransitions(now);
+  const log: string[] = [];
+  for (const c of toOpen) {
+    try {
+      await openCompetition(c.id, actor);
+      log.push(`opened ${c.name}`);
+    } catch (e) {
+      log.push(`could not open ${c.name}: ${(e as Error).message}`);
+    }
+  }
+  for (const c of toClose) {
+    try {
+      const after = await closeCompetition(c.id, actor);
+      log.push(`closed ${c.name} → ${after.status}`);
+    } catch (e) {
+      // A concurrent caller may already have closed it.
+      if (!/Only open competitions/.test((e as Error).message)) log.push(`could not close ${c.name}: ${(e as Error).message}`);
+    }
+  }
+  return log;
 }

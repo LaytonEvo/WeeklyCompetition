@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { bookings, competitions, customers, hioClaims, payments, rounds, shotEvidence, shots } from "@/db/schema";
 import { formatMm } from "@/lib/distance";
 import { DEFAULT_TZ } from "@/lib/time";
+import { SYSTEM_ACTOR } from "@/lib/audit";
+import { applyDueTransitions } from "./competitions";
 import { publicDisplayName } from "./customers";
 import { bestOfShots } from "./rounds";
 
@@ -12,6 +14,7 @@ export type ConsoleBooking = Awaited<ReturnType<typeof consoleState>>["bookings"
 
 /** Everything the counter console needs in one round-trip. */
 export async function consoleState() {
+  await applyDueTransitions(SYSTEM_ACTOR);
   const comps = await db
     .select()
     .from(competitions)
