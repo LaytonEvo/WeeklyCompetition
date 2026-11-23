@@ -136,6 +136,7 @@ async function main() {
     rulesMarkdown: DRAFT_RULES_MD,
     termsVersion: TERMS,
     showRoundsCount: true,
+    jackpotFundingId: fund.id,
   };
   const [tpl] = await db.insert(competitionTemplates).values({ name: "Weekly Pin Hunters", locationId: loc.id, simulatorId: sim.id, config, autoCreateWeekly: true, nextSequence: 1 }).returning();
 

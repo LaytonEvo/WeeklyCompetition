@@ -112,7 +112,7 @@ export async function updatePrize(
   return db.transaction(async (tx) => {
     const [a] = await tx.select().from(prizeAwards).where(eq(prizeAwards.id, awardId)).for("update");
     if (!a) throw new NotFoundError("Prize");
-    if (!PRIZE_TRANSITIONS[a.status].includes(to)) throw new ConflictError(`Can't move a ${a.status.replace("_", " ")} prize to ${to.replace("_", " ")}.`);
+    if (!PRIZE_TRANSITIONS[a.status].includes(to)) throw new ConflictError(`Can't move a ${a.status.replaceAll("_", " ")} prize to ${to.replaceAll("_", " ")}.`);
     const patch: Partial<typeof prizeAwards.$inferInsert> = { status: to, updatedAt: new Date() };
     if (to === "claimed") patch.claimedAt = new Date();
     if (to === "fulfilled") {

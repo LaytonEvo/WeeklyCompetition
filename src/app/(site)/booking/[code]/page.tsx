@@ -47,7 +47,7 @@ export default async function BookingPage({ params, searchParams }: { params: Pr
             <div className="flex justify-between gap-4 border-b border-line pb-3"><dt className="text-muted">Competition</dt><dd className="text-right font-semibold">{comp.name}</dd></div>
             <div className="flex justify-between gap-4 border-b border-line pb-3"><dt className="text-muted">Session</dt><dd className="text-right font-semibold">{formatLocal(b.startsAt, "cccc d LLLL, HH:mm")}</dd></div>
             <div className="flex justify-between gap-4 border-b border-line pb-3"><dt className="text-muted">Rounds</dt><dd className="font-semibold">{b.roundsQty} × {comp.shotsPerRound} shots</dd></div>
-            {pay && <div className="flex justify-between gap-4 border-b border-line pb-3"><dt className="text-muted">Payment</dt><dd className="font-semibold">{pay.amountPence ? formatPence(pay.amountPence) : "Free entry"} · {pay.status.replace("_", " ")}</dd></div>}
+            {pay && <div className="flex justify-between gap-4 border-b border-line pb-3"><dt className="text-muted">Payment</dt><dd className="font-semibold">{pay.amountPence ? formatPence(pay.amountPence) : "Free entry"} · {pay.status.replaceAll("_", " ")}</dd></div>}
             <div className="flex justify-between gap-4"><dt className="text-muted">Booking code</dt><dd className="font-mono text-lg font-bold tracking-[0.2em] text-pine">{b.checkinCode}</dd></div>
           </dl>
           {confirmed && (

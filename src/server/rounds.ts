@@ -30,7 +30,7 @@ export async function startRound(roundId: string, actor: Actor & { type: "user" 
   return db.transaction(async (tx) => {
     const { round, competition } = await lockRound(tx, roundId);
     if (round.status === "in_progress") return round;
-    if (!["booked", "checked_in"].includes(round.status)) throw new ConflictError(`This round is ${round.status.replace("_", " ")} and can't be started.`);
+    if (!["booked", "checked_in"].includes(round.status)) throw new ConflictError(`This round is ${round.status.replaceAll("_", " ")} and can't be started.`);
     if (competition.status !== "open" || now >= competition.endsAt || now < competition.startsAt) {
       throw new ConflictError("Rounds can only be started while the competition is open.");
     }
@@ -219,7 +219,7 @@ export async function setRoundStatus(
   if (to !== "in_progress" && !reason.trim()) throw new AppError("A reason is required.");
   return db.transaction(async (tx) => {
     const { round } = await lockRound(tx, roundId);
-    if (!allowed[to].includes(round.status)) throw new ConflictError(`Can't change a ${round.status.replace("_", " ")} round to ${to.replace("_", " ")}.`);
+    if (!allowed[to].includes(round.status)) throw new ConflictError(`Can't change a ${round.status.replaceAll("_", " ")} round to ${to.replaceAll("_", " ")}.`);
     const [after] = await tx.update(rounds).set({ status: to, statusReason: reason || round.statusReason, updatedAt: new Date() }).where(eq(rounds.id, roundId)).returning();
     await audit(tx, actor, `round.${to === "in_progress" ? "resume" : to}`, "round", roundId, { before: { status: round.status }, reason });
     if (round.status === "completed") await bumpLeaderboard(tx, round.competitionId);

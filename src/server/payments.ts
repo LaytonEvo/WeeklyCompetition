@@ -194,7 +194,7 @@ export async function refundPayment(
 
   const [p] = await db.select().from(payments).where(eq(payments.id, paymentId));
   if (!p) throw new NotFoundError("Payment");
-  if (!["paid", "paid_in_store", "partially_refunded"].includes(p.status)) throw new ConflictError(`A ${p.status.replace("_", " ")} payment can't be refunded.`);
+  if (!["paid", "paid_in_store", "partially_refunded"].includes(p.status)) throw new ConflictError(`A ${p.status.replaceAll("_", " ")} payment can't be refunded.`);
   const refundable = p.amountPence - p.refundedPence;
   if (!Number.isInteger(opts.amountPence) || opts.amountPence <= 0 || opts.amountPence > refundable) throw new AppError(`Refund must be between 1p and ${refundable}p.`);
 

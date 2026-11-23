@@ -411,6 +411,7 @@ export type CompetitionConfig = {
   rulesMarkdown: string;
   termsVersion: string;
   showRoundsCount: boolean;
+  jackpotFundingId?: string | null;
 };
 
 export const competitionTemplates = pgTable("competition_templates", {

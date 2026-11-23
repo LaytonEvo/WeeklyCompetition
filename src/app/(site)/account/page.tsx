@@ -83,7 +83,7 @@ export default async function AccountPage() {
                       {h.rounds.map(({ round, shots, best }) => (
                         <div key={round.id} className="flex flex-wrap items-center gap-2 text-sm text-muted">
                           <span className="w-24">{formatLocal(round.startedAt ?? round.createdAt, "ccc d LLL")}</span>
-                          {shots.length ? shots.map((s) => <span key={s.id} className={`rounded-md px-1.5 py-0.5 tabular ${s.valid && (s.onGreen || !h.competition.requireOnGreen) ? "bg-green-50 text-pine" : "bg-zinc-100 line-through"}`}>{s.isHoleInOne ? "ACE" : s.distanceMm !== null ? formatMm(s.distanceMm) : "—"}</span>) : <span className="italic">{round.status.replace("_", " ")}</span>}
+                          {shots.length ? shots.map((s) => <span key={s.id} className={`rounded-md px-1.5 py-0.5 tabular ${s.valid && (s.onGreen || !h.competition.requireOnGreen) ? "bg-green-50 text-pine" : "bg-zinc-100 line-through"}`}>{s.isHoleInOne ? "ACE" : s.distanceMm !== null ? formatMm(s.distanceMm) : "—"}</span>) : <span className="italic">{round.status.replaceAll("_", " ")}</span>}
                           {best !== null && round.status === "completed" && (
                             <a href={`/share/result/${round.id}?format=story`} className="ml-auto inline-flex items-center gap-1 text-green hover:underline"><Share2 className="size-3.5" /> Share card</a>
                           )}
@@ -106,7 +106,7 @@ export default async function AccountPage() {
               <ul className="divide-y divide-line">
                 {prizes.map(({ a, c: comp }) => (
                   <li key={a.id} className="px-5 py-4 text-sm">
-                    <div className="flex justify-between"><span className="font-semibold">{a.kind === "jackpot" ? "Hole-in-one jackpot" : `Position ${a.rank}`}</span><Badge tone={prizeTone[a.status]}>{a.status.replace("_", " ")}</Badge></div>
+                    <div className="flex justify-between"><span className="font-semibold">{a.kind === "jackpot" ? "Hole-in-one jackpot" : `Position ${a.rank}`}</span><Badge tone={prizeTone[a.status]}>{a.status.replaceAll("_", " ")}</Badge></div>
                     <div className="mt-1 text-muted">{comp.name} · {a.prizeAmountPence ? formatPence(a.prizeAmountPence) : a.prizeDescription}</div>
                     {a.status === "awaiting_claim" && a.claimDeadline && <div className="mt-1 text-xs text-gold">Claim by {formatLocal(a.claimDeadline, "d LLL yyyy")}</div>}
                   </li>

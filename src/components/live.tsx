@@ -74,9 +74,12 @@ export function Countdown({ to, className, closedText = "Closed" }: { to: string
   const target = useMemo(() => new Date(to).getTime(), [to]);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
+    const first = setTimeout(() => setNow(Date.now()), 0);
     const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
   }, []);
   if (now === null) return <span className={className}>&nbsp;</span>;
   const ms = target - now;

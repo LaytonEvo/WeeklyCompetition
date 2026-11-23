@@ -16,6 +16,7 @@ export default async function Top10Widget() {
   return (
     <div className="p-3">
       <div className="mb-3 flex items-baseline justify-between">
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- must break out of the embedding iframe */}
         <a href="/leaderboard" target="_top" className="font-display text-xl font-bold uppercase text-pine">Pin Hunters · Top 10</a>
         <span className="text-xs text-muted">{c.name}</span>
       </div>

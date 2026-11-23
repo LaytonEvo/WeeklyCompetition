@@ -42,7 +42,7 @@ export const TRANSITIONS: Record<CompetitionStatus, CompetitionStatus[]> = {
 
 export function assertTransition(from: CompetitionStatus, to: CompetitionStatus) {
   if (!TRANSITIONS[from].includes(to)) {
-    throw new ConflictError(`A competition cannot move from "${from.replace("_", " ")}" to "${to.replace("_", " ")}".`);
+    throw new ConflictError(`A competition cannot move from "${from.replaceAll("_", " ")}" to "${to.replaceAll("_", " ")}".`);
   }
 }
 
@@ -432,6 +432,7 @@ export function inputFromTemplate(
     jackpotSubsequentQualify: cfg.jackpotSubsequentQualify,
     hioCountsForWeekly: cfg.hioCountsForWeekly,
     jackpotClaimDays: cfg.jackpotClaimDays,
+    jackpotFundingId: cfg.jackpotFundingId ?? null,
     prizes: cfg.prizes,
   };
 }

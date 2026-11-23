@@ -1,5 +1,7 @@
 import { sql, type SQL } from "drizzle-orm";
+import { DateTime } from "luxon";
 import { db } from "@/db";
+import { DEFAULT_TZ } from "@/lib/time";
 
 export interface ReportFilters {
   from: Date;
@@ -111,4 +113,18 @@ export function toCsv(rows: Record<string, unknown>[]): string {
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return [cols.join(","), ...rows.map((r) => cols.map((c) => cell(r[c])).join(","))].join("\n");
+}
+
+export function parseFilters(sp: Record<string, string | undefined>): ReportFilters {
+  const now = DateTime.now().setZone(DEFAULT_TZ);
+  const from = sp.from && /^\d{4}-\d{2}-\d{2}$/.test(sp.from) ? DateTime.fromISO(sp.from, { zone: DEFAULT_TZ }) : now.minus({ days: 27 }).startOf("day");
+  const to = sp.to && /^\d{4}-\d{2}-\d{2}$/.test(sp.to) ? DateTime.fromISO(sp.to, { zone: DEFAULT_TZ }).endOf("day") : now.endOf("day");
+  return {
+    from: from.toUTC().toJSDate(),
+    to: to.toUTC().toJSDate(),
+    competitionId: sp.competition || null,
+    locationId: sp.location || null,
+    source: sp.source || null,
+    customerType: sp.type === "new" || sp.type === "returning" ? sp.type : null,
+  };
 }

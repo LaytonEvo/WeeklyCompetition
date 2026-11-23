@@ -165,7 +165,7 @@ export async function checkInBooking(bookingId: string, actor: Actor & { type: "
     const [b] = await tx.select().from(bookings).where(eq(bookings.id, bookingId)).for("update");
     if (!b) throw new NotFoundError("Booking");
     if (b.status === "checked_in") return b;
-    if (!["confirmed", "no_show"].includes(b.status)) throw new ConflictError(`A ${b.status.replace("_", " ")} booking cannot be checked in.`);
+    if (!["confirmed", "no_show"].includes(b.status)) throw new ConflictError(`A ${b.status.replaceAll("_", " ")} booking cannot be checked in.`);
     const [after] = await tx
       .update(bookings)
       .set({ status: "checked_in", checkedInAt: new Date(), checkedInByUserId: actor.id, updatedAt: new Date() })

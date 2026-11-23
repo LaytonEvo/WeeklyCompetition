@@ -13,25 +13,33 @@ export function BookingFlow({ competitions, initialSlug, maxRounds, termsVersion
   const [compId, setCompId] = useState(() => competitions.find((c) => c.slug === initialSlug)?.id ?? competitions[0]?.id);
   const comp = competitions.find((c) => c.id === compId)!;
   const [rounds, setRounds] = useState(1);
-  const [days, setDays] = useState<Day[] | null>(null);
+  const [data, setData] = useState<{ key: string; days: Day[] } | null>(null);
+  const [nonce, setNonce] = useState(0);
   const [day, setDay] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [key] = useState(() => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()));
+  const queryKey = `${compId}:${rounds}:${nonce}`;
+  const days = data?.key === queryKey ? data.days : null;
+  const load = useCallback(() => setNonce((n) => n + 1), []);
 
-  const load = useCallback(async () => {
-    setDays(null);
-    const res = await fetch(`/api/slots?competitionId=${compId}&rounds=${rounds}`, { cache: "no-store" });
-    const data = (await res.json()) as { days: Day[] };
-    setDays(data.days);
-    setDay((d) => (d && data.days.some((x) => x.date === d) ? d : (data.days.find((x) => x.slots.some((s) => s.status === "available"))?.date ?? data.days[0]?.date ?? null)));
-    setSlot(null);
-  }, [compId, rounds]);
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetch(`/api/slots?competitionId=${compId}&rounds=${rounds}`, { cache: "no-store" })
+      .then((r) => r.json() as Promise<{ days: Day[] }>)
+      .then((d) => {
+        if (cancelled) return;
+        setData({ key: queryKey, days: d.days });
+        setDay((cur) => (cur && d.days.some((x) => x.date === cur) ? cur : (d.days.find((x) => x.slots.some((s) => s.status === "available"))?.date ?? d.days[0]?.date ?? null)));
+        setSlot(null);
+      })
+      .catch(() => !cancelled && setData({ key: queryKey, days: [] }));
+    return () => {
+      cancelled = true;
+    };
+  }, [compId, rounds, queryKey]);
 
   const activeDay = useMemo(() => days?.find((d) => d.date === day), [days, day]);
   const total = comp.entryMode === "paid" ? `£${((comp.entryFeePence * rounds) / 100).toFixed(2)}` : "Free";
